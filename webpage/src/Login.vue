@@ -22,7 +22,16 @@
       </div>
       <br>
       <Card>
-        <Tabs value="custom">
+        <Tabs value="saml">
+          <TabPane label="邮箱登陆" name="saml">
+            <Form ref="formInline" :model="formInline" :rules="ruleInline" inline>
+              <Form-item style="width: 100%">
+                <Button type="primary" @click="saml_login()" style="width: 100%" size="large">一键登录</Button>
+                <p style="margin-left: 22%;margin-top: 2%">如需注册账号请联系平台管理员</p>
+                <p style="margin-left: 5%;">2018 © Power By Cookie.Ye 使用chrome获得最佳体验</p>
+              </Form-item>
+            </Form>
+          </TabPane>
           <TabPane label="普通登陆" name="custom">
             <Form ref="formInline" :model="formInline" :rules="ruleInline" inline>
               <Form-item prop="user" style="width: 100%">
@@ -100,7 +109,40 @@
         }
       }
     },
+    created: function () {
+       this.checkStatus();
+    },
     methods: {
+      checkStatus () {
+         var user = this.getCookie('username')
+         var pwd = this.getCookie('password')
+         var jwt = this.getCookie('token')
+         var permissions = this.getCookie('permissions')
+         if (user !== '') {
+            sessionStorage.setItem('user', user)
+            sessionStorage.setItem('password', pwd)
+            sessionStorage.setItem('jwt', jwt)
+            sessionStorage.setItem('auth', permissions)
+            if (permissions === 'admin') {
+                sessionStorage.setItem('access', 0)
+            } else {
+                sessionStorage.setItem('access', 1)
+            }
+            this.$router.push({
+              name: 'home_index'
+            })
+         }
+      },
+      getCookie (cname) {
+         var name = cname + '=';
+         var ca = document.cookie.split(';');
+         for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1);
+              if (c.indexOf(name) !== -1) return c.substring(name.length, c.length);
+        }
+        return '';
+      },
       authdata () {
         axios.post(util.auth, {
           'username': this.formInline.user,
@@ -153,6 +195,16 @@
                 name: 'home_index'
               })
             }
+          })
+          .catch(error => {
+            util.ajanxerrorcode(this, error)
+          })
+      },
+      saml_login () {
+        axios.post(`${util.url}/samlauth?sso`, {
+        })
+          .then(res => {
+            window.location.href = res.data['res']
           })
           .catch(error => {
             util.ajanxerrorcode(this, error)
